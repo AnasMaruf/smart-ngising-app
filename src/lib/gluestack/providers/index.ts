@@ -1,1 +1,1 @@
-export { default as GluestackUIProvider } from './GluestackUIProvider';
+export { default as GluestackUIProvider } from "./GluestackUIProvider";
