@@ -1,15 +1,15 @@
 "use client";
+import React from "react";
 import { createButton } from "@gluestack-ui/core/button/creator";
-import { PrimitiveIcon, UIIcon } from "@gluestack-ui/core/icon/creator";
 import {
   tva,
-  useStyleContext,
   withStyleContext,
+  useStyleContext,
   type VariantProps,
 } from "@gluestack-ui/utils/nativewind-utils";
 import { cssInterop } from "nativewind";
-import React from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { PrimitiveIcon, UIIcon } from "@gluestack-ui/core/icon/creator";
 
 const SCOPE = "BUTTON";
 
@@ -431,4 +431,4 @@ ButtonSpinner.displayName = "ButtonSpinner";
 ButtonIcon.displayName = "ButtonIcon";
 ButtonGroup.displayName = "ButtonGroup";
 
-export { Button, ButtonGroup, ButtonIcon, ButtonSpinner, ButtonText };
+export { Button, ButtonText, ButtonSpinner, ButtonIcon, ButtonGroup };
