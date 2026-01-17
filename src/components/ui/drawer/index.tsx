@@ -1,24 +1,14 @@
 "use client";
 import React from "react";
 import { createModal as createDrawer } from "@gluestack-ui/core/modal/creator";
-import {
-  Pressable,
-  View,
-  ScrollView,
-  Dimensions,
-  ViewStyle,
-} from "react-native";
+import { Pressable, View, ScrollView, Dimensions, ViewStyle } from "react-native";
 import {
   Motion,
   AnimatePresence,
   createMotionAnimatedComponent,
   MotionComponentProps,
 } from "@legendapp/motion";
-import {
-  tva,
-  withStyleContext,
-  useStyleContext,
-} from "@gluestack-ui/utils/nativewind-utils";
+import { tva, withStyleContext, useStyleContext } from "@gluestack-ui/utils/nativewind-utils";
 import { cssInterop } from "nativewind";
 import type { VariantProps } from "@gluestack-ui/utils/nativewind-utils";
 
@@ -26,7 +16,7 @@ type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
 
 const AnimatedPressable = createMotionAnimatedComponent(
-  Pressable,
+  Pressable
 ) as React.ComponentType<IAnimatedPressableProps>;
 
 const SCOPE = "MODAL";
@@ -174,15 +164,13 @@ type IDrawerBodyProps = React.ComponentProps<typeof UIDrawer.Body> &
 type IDrawerFooterProps = React.ComponentProps<typeof UIDrawer.Footer> &
   VariantProps<typeof drawerFooterStyle> & { className?: string };
 
-type IDrawerCloseButtonProps = React.ComponentProps<
-  typeof UIDrawer.CloseButton
-> &
+type IDrawerCloseButtonProps = React.ComponentProps<typeof UIDrawer.CloseButton> &
   VariantProps<typeof drawerCloseButtonStyle> & { className?: string };
 
-const Drawer = React.forwardRef<
-  React.ComponentRef<typeof UIDrawer>,
-  IDrawerProps
->(function Drawer({ className, size = "sm", anchor = "left", ...props }, ref) {
+const Drawer = React.forwardRef<React.ComponentRef<typeof UIDrawer>, IDrawerProps>(function Drawer(
+  { className, size = "sm", anchor = "left", ...props },
+  ref
+) {
   return (
     <UIDrawer
       ref={ref}
@@ -290,20 +278,19 @@ const DrawerHeader = React.forwardRef<
   );
 });
 
-const DrawerBody = React.forwardRef<
-  React.ComponentRef<typeof UIDrawer.Body>,
-  IDrawerBodyProps
->(function DrawerBody({ className, ...props }, ref) {
-  return (
-    <UIDrawer.Body
-      ref={ref}
-      {...props}
-      className={drawerBodyStyle({
-        class: className,
-      })}
-    />
-  );
-});
+const DrawerBody = React.forwardRef<React.ComponentRef<typeof UIDrawer.Body>, IDrawerBodyProps>(
+  function DrawerBody({ className, ...props }, ref) {
+    return (
+      <UIDrawer.Body
+        ref={ref}
+        {...props}
+        className={drawerBodyStyle({
+          class: className,
+        })}
+      />
+    );
+  }
+);
 
 const DrawerFooter = React.forwardRef<
   React.ComponentRef<typeof UIDrawer.Footer>,

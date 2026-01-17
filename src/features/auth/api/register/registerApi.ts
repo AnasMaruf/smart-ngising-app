@@ -1,6 +1,6 @@
 import { ENDPOINTS, usePostFormData } from "@/services";
-import type { IAuthRegisterResponse } from "./type";
+import type { RegisterRequest, IAuthRegisterResponse } from "./type";
 
 export const useRegisterMutation = () => {
-    return usePostFormData<FormData, IAuthRegisterResponse>(ENDPOINTS.AUTH.REGISTER);
+  return usePostFormData<RegisterRequest, IAuthRegisterResponse>(ENDPOINTS.AUTH.REGISTER);
 };

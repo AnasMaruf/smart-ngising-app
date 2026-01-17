@@ -23,8 +23,7 @@ const imageStyle = tva({
 
 const UIImage = createImage({ Root: RNImage });
 
-type ImageProps = VariantProps<typeof imageStyle> &
-  React.ComponentProps<typeof UIImage>;
+type ImageProps = VariantProps<typeof imageStyle> & React.ComponentProps<typeof UIImage>;
 const Image = React.forwardRef<
   React.ComponentRef<typeof UIImage>,
   ImageProps & { className?: string }
@@ -35,11 +34,7 @@ const Image = React.forwardRef<
       {...props}
       ref={ref}
       // @ts-expect-error : web only
-      style={
-        Platform.OS === "web"
-          ? { height: "revert-layer", width: "revert-layer" }
-          : undefined
-      }
+      style={Platform.OS === "web" ? { height: "revert-layer", width: "revert-layer" } : undefined}
     />
   );
 });

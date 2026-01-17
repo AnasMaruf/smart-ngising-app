@@ -1,19 +1,23 @@
+export interface RegisterRequest {
+  fullName: string;
+  username: string;
+  email: string;
+  pin: string;
+}
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  createdAt: string;
+}
+
 export interface IAuthRegisterResponse {
-    data: IAuthRegisterData;
-}
-
-export interface IAuthRegisterData {
-    message: string;
-    token: string;
-    user: IUser;
-}
-
-export interface IUser {
-    id: number;
-    name: string;
-    email: string;
-    email_verified_at: string | null;
-    is_verified: boolean;
-    gender: string | null;
-    role: string | null;
+  data: {
+    user: User;
+    accessToken: string;
+    refreshToken: string;
+  };
+  message: string;
 }

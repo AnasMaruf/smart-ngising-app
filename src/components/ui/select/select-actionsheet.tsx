@@ -29,7 +29,7 @@ type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
 
 const AnimatedPressable = createMotionAnimatedComponent(
-  Pressable,
+  Pressable
 ) as React.ComponentType<IAnimatedPressableProps>;
 
 type IMotionViewProps = React.ComponentProps<typeof View> &
@@ -236,9 +236,7 @@ type IActionsheetItemProps = VariantProps<typeof actionsheetItemStyle> &
 type IActionsheetItemTextProps = VariantProps<typeof actionsheetItemTextStyle> &
   React.ComponentProps<typeof UIActionsheet.ItemText> & { className?: string };
 
-type IActionsheetDragIndicatorProps = VariantProps<
-  typeof actionsheetDragIndicatorStyle
-> &
+type IActionsheetDragIndicatorProps = VariantProps<typeof actionsheetDragIndicatorStyle> &
   React.ComponentProps<typeof UIActionsheet.DragIndicator> & {
     className?: string;
   };
@@ -255,16 +253,12 @@ type IActionsheetBackdropProps = VariantProps<typeof actionsheetBackdropStyle> &
     className?: string;
   };
 
-type IActionsheetScrollViewProps = VariantProps<
-  typeof actionsheetScrollViewStyle
-> &
+type IActionsheetScrollViewProps = VariantProps<typeof actionsheetScrollViewStyle> &
   React.ComponentProps<typeof UIActionsheet.ScrollView> & {
     className?: string;
   };
 
-type IActionsheetVirtualizedListProps = VariantProps<
-  typeof actionsheetVirtualizedListStyle
-> &
+type IActionsheetVirtualizedListProps = VariantProps<typeof actionsheetVirtualizedListStyle> &
   React.ComponentProps<typeof UIActionsheet.VirtualizedList> & {
     className?: string;
   };
@@ -274,16 +268,12 @@ type IActionsheetFlatListProps = VariantProps<typeof actionsheetFlatListStyle> &
     className?: string;
   };
 
-type IActionsheetSectionListProps = VariantProps<
-  typeof actionsheetSectionListStyle
-> &
+type IActionsheetSectionListProps = VariantProps<typeof actionsheetSectionListStyle> &
   React.ComponentProps<typeof UIActionsheet.SectionList> & {
     className?: string;
   };
 
-type IActionsheetSectionHeaderTextProps = VariantProps<
-  typeof actionsheetSectionHeaderTextStyle
-> &
+type IActionsheetSectionHeaderTextProps = VariantProps<typeof actionsheetSectionHeaderTextStyle> &
   React.ComponentProps<typeof UIActionsheet.SectionHeaderText> & {
     className?: string;
   };
@@ -294,20 +284,19 @@ type IActionsheetIconProps = VariantProps<typeof actionsheetIconStyle> &
     as?: React.ElementType;
   };
 
-const Actionsheet = React.forwardRef<
-  React.ComponentRef<typeof UIActionsheet>,
-  IActionsheetProps
->(function Actionsheet({ className, ...props }, ref) {
-  return (
-    <UIActionsheet
-      className={actionsheetStyle({
-        class: className,
-      })}
-      ref={ref}
-      {...props}
-    />
-  );
-});
+const Actionsheet = React.forwardRef<React.ComponentRef<typeof UIActionsheet>, IActionsheetProps>(
+  function Actionsheet({ className, ...props }, ref) {
+    return (
+      <UIActionsheet
+        className={actionsheetStyle({
+          class: className,
+        })}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
 
 const ActionsheetContent = React.forwardRef<
   React.ComponentRef<typeof UIActionsheet.Content>,
@@ -344,7 +333,7 @@ const ActionsheetItemText = React.forwardRef<
   IActionsheetItemTextProps
 >(function ActionsheetItemText(
   { className, isTruncated, bold, underline, strikeThrough, size, ...props },
-  ref,
+  ref
 ) {
   return (
     <UIActionsheet.ItemText
@@ -492,7 +481,7 @@ const ActionsheetSectionHeaderText = React.forwardRef<
     highlight,
     ...props
   },
-  ref,
+  ref
 ) {
   return (
     <UIActionsheet.SectionHeaderText
@@ -516,10 +505,7 @@ const ActionsheetSectionHeaderText = React.forwardRef<
 const ActionsheetIcon = React.forwardRef<
   React.ComponentRef<typeof UIActionsheet.Icon>,
   IActionsheetIconProps
->(function ActionsheetIcon(
-  { className, as: AsComp, size = "sm", ...props },
-  ref,
-) {
+>(function ActionsheetIcon({ className, as: AsComp, size = "sm", ...props }, ref) {
   if (AsComp) {
     return (
       <AsComp

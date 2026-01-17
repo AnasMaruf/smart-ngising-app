@@ -2,17 +2,9 @@
 import React from "react";
 import { createToastHook } from "@gluestack-ui/core/toast/creator";
 import { AccessibilityInfo, Text, View, ViewStyle } from "react-native";
-import {
-  tva,
-  withStyleContext,
-  useStyleContext,
-} from "@gluestack-ui/utils/nativewind-utils";
+import { tva, withStyleContext, useStyleContext } from "@gluestack-ui/utils/nativewind-utils";
 import { cssInterop } from "nativewind";
-import {
-  Motion,
-  AnimatePresence,
-  MotionComponentProps,
-} from "@legendapp/motion";
+import { Motion, AnimatePresence, MotionComponentProps } from "@legendapp/motion";
 import type { VariantProps } from "@gluestack-ui/utils/nativewind-utils";
 
 type IMotionViewProps = React.ComponentProps<typeof View> &
@@ -156,82 +148,77 @@ type IToastProps = React.ComponentProps<typeof Root> & {
   className?: string;
 } & VariantProps<typeof toastStyle>;
 
-const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
-  function Toast(
-    { className, variant = "solid", action = "muted", ...props },
-    ref,
-  ) {
-    return (
-      <Root
-        ref={ref}
-        className={toastStyle({ variant, action, class: className })}
-        context={{ variant, action }}
-        {...props}
-      />
-    );
-  },
-);
+const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(function Toast(
+  { className, variant = "solid", action = "muted", ...props },
+  ref
+) {
+  return (
+    <Root
+      ref={ref}
+      className={toastStyle({ variant, action, class: className })}
+      context={{ variant, action }}
+      {...props}
+    />
+  );
+});
 
 type IToastTitleProps = React.ComponentProps<typeof Text> & {
   className?: string;
 } & VariantProps<typeof toastTitleStyle>;
 
-const ToastTitle = React.forwardRef<
-  React.ComponentRef<typeof Text>,
-  IToastTitleProps
->(function ToastTitle({ className, size = "md", children, ...props }, ref) {
-  const { variant: parentVariant, action: parentAction } =
-    useStyleContext(SCOPE);
-  React.useEffect(() => {
-    // Issue from react-native side
-    // Hack for now, will fix this later
-    AccessibilityInfo.announceForAccessibility(children as string);
-  }, [children]);
+const ToastTitle = React.forwardRef<React.ComponentRef<typeof Text>, IToastTitleProps>(
+  function ToastTitle({ className, size = "md", children, ...props }, ref) {
+    const { variant: parentVariant, action: parentAction } = useStyleContext(SCOPE);
+    React.useEffect(() => {
+      // Issue from react-native side
+      // Hack for now, will fix this later
+      AccessibilityInfo.announceForAccessibility(children as string);
+    }, [children]);
 
-  return (
-    <Text
-      {...props}
-      ref={ref}
-      aria-live="assertive"
-      aria-atomic="true"
-      role="alert"
-      className={toastTitleStyle({
-        size,
-        class: className,
-        parentVariants: {
-          variant: parentVariant,
-          action: parentAction,
-        },
-      })}
-    >
-      {children}
-    </Text>
-  );
-});
+    return (
+      <Text
+        {...props}
+        ref={ref}
+        aria-live="assertive"
+        aria-atomic="true"
+        role="alert"
+        className={toastTitleStyle({
+          size,
+          class: className,
+          parentVariants: {
+            variant: parentVariant,
+            action: parentAction,
+          },
+        })}
+      >
+        {children}
+      </Text>
+    );
+  }
+);
 
 type IToastDescriptionProps = React.ComponentProps<typeof Text> & {
   className?: string;
 } & VariantProps<typeof toastDescriptionStyle>;
 
-const ToastDescription = React.forwardRef<
-  React.ComponentRef<typeof Text>,
-  IToastDescriptionProps
->(function ToastDescription({ className, size = "md", ...props }, ref) {
-  const { variant: parentVariant } = useStyleContext(SCOPE);
-  return (
-    <Text
-      ref={ref}
-      {...props}
-      className={toastDescriptionStyle({
-        size,
-        class: className,
-        parentVariants: {
-          variant: parentVariant,
-        },
-      })}
-    />
-  );
-});
+const ToastDescription = React.forwardRef<React.ComponentRef<typeof Text>, IToastDescriptionProps>(
+  function ToastDescription({ className, size = "md", ...props }, ref) {
+    const { variant: parentVariant } = useStyleContext(SCOPE);
+    return (
+      <Text
+        ref={ref}
+        {...props}
+        className={toastDescriptionStyle({
+          size,
+          class: className,
+          parentVariants: {
+            variant: parentVariant,
+          },
+        })}
+      />
+    );
+  }
+);
 
 Toast.displayName = "Toast";
 ToastTitle.displayName = "ToastTitle";
