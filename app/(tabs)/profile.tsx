@@ -1,9 +1,3 @@
-import { Text, View } from "react-native";
+import { ProfileScreen } from "@/features";
 
-export default function ProfileScreen() {
-  return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-base text-slate-900">Profile</Text>
-    </View>
-  );
-}
+export default ProfileScreen;

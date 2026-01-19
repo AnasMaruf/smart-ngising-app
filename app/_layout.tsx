@@ -1,5 +1,5 @@
-import { GluestackUIProvider } from "@/lib/gluestack/providers";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { GluestackUIProvider } from "@/lib/gluestack/providers";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
