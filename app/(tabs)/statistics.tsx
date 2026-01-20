@@ -1,3 +1,3 @@
-import { StatisticsScreen } from "@/features/statistics";
+import { StatisticsScreen } from "@/features";
 
-export default StatisticsScreen
+export default StatisticsScreen;
