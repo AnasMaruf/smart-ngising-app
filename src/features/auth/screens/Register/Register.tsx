@@ -1,14 +1,4 @@
-import { Asset } from "expo-asset";
-import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
-import React, { useState } from "react";
-import { Alert } from "react-native";
-import { SvgUri } from "react-native-svg";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useAuth } from "@/contexts/AuthContext";
+import { logoSvg } from "@/assets";
 import {
   Box,
   VStack,
@@ -26,8 +16,17 @@ import {
   FormControlErrorText,
   Pressable,
 } from "@/components";
-
-import { logoSvg } from "@/assets";
+import { useAuth } from "@/contexts/AuthContext";
+import { Asset } from "expo-asset";
+import { Ionicons } from "@expo/vector-icons";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "expo-router";
+import React, { useState } from "react";
+import { Alert } from "react-native";
+import { Controller, useForm } from "react-hook-form";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { SvgUri } from "react-native-svg";
+import { z } from "zod";
 
 const schema = z
   .object({
@@ -50,12 +49,12 @@ type FormData = z.infer<typeof schema>;
 const RegisterScreen = () => {
   const [showPin, setShowPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
-  const { register } = useAuth();
+  const { register, isRegistering } = useAuth();
 
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { fullName: "", username: "", email: "", pin: "", confirmPin: "" },
@@ -290,7 +289,7 @@ const RegisterScreen = () => {
 
               <Button
                 onPress={handleSubmit(onSubmit)}
-                disabled={isSubmitting}
+                disabled={isRegistering}
                 className="h-12 rounded-xl bg-[#0066ff]"
                 style={{
                   shadowColor: "#000000",
@@ -300,9 +299,9 @@ const RegisterScreen = () => {
                   elevation: 6,
                 }}
               >
-                {isSubmitting && <ButtonSpinner color="white" />}
+                {isRegistering && <ButtonSpinner color="white" />}
                 <ButtonText className="text-base font-medium">
-                  {isSubmitting ? "Creating..." : "Create Account"}
+                  {isRegistering ? "Creating..." : "Create Account"}
                 </ButtonText>
               </Button>
             </VStack>

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
+import { useLoginMutation } from "@/features/auth/api/login";
+import type { LoginRequest } from "@/features/auth/api/login/type";
 import { useRegisterMutation } from "@/features/auth/api/register";
 import type { User } from "@/features/auth/api/register/type";
 
@@ -12,8 +14,10 @@ type AuthContextType = {
     email: string;
     pin: string;
   }) => Promise<void>;
+  login: (data: Pick<LoginRequest, "email" | "username" | "pin">) => Promise<void>;
   logout: () => Promise<void>;
   isRegistering: boolean;
+  isLoggingIn: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -28,6 +32,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const registerMutation = useRegisterMutation();
+  const loginMutation = useLoginMutation();
 
   useEffect(() => {
     (async () => {
@@ -50,6 +55,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(res.data.user);
   };
 
+  const login = async (data: Pick<LoginRequest, "email" | "username" | "pin">) => {
+    const res = await loginMutation.mutateAsync(data);
+    await SecureStore.setItemAsync("accessToken", res.accessToken);
+    await SecureStore.setItemAsync("refreshToken", res.refreshToken);
+    await SecureStore.setItemAsync("user", JSON.stringify(res.data));
+    setUser(res.data);
+  };
+
   const logout = async () => {
     await SecureStore.deleteItemAsync("accessToken");
     await SecureStore.deleteItemAsync("refreshToken");
@@ -59,7 +72,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, register, logout, isRegistering: registerMutation.isPending }}
+      value={{
+        user,
+        isLoading,
+        register,
+        login,
+        logout,
+        isRegistering: registerMutation.isPending,
+        isLoggingIn: loginMutation.isPending,
+      }}
     >
       {children}
     </AuthContext.Provider>

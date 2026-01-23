@@ -1,5 +1,7 @@
+import { AddRecordModal } from "@/components";
 import { useAuth } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -41,11 +43,13 @@ const recentLogs = [
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const firstName = user?.fullName?.split(" ")?.[0] ?? "Friend";
+  const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#f1f4ff]">
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View className="rounded-b-[32px] bg-[#0c64ff] px-6 pb-10 pt-4">
+    <View className="flex-1">
+      <SafeAreaView className="flex-1 bg-[#f1f4ff]">
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View className="rounded-b-[32px] bg-[#0c64ff] px-6 pb-10 pt-4">
           <View className="flex-row items-start justify-between">
             <View>
               <Text className="text-base text-white/80">Welcome back,</Text>
@@ -102,9 +106,34 @@ export default function HomeScreen() {
               </View>
             ))}
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+
+      <Pressable
+        onPress={() => setIsAddRecordOpen(true)}
+        style={{
+          position: "absolute",
+          bottom: 32,
+          right: 24,
+          height: 64,
+          width: 64,
+          borderRadius: 32,
+          backgroundColor: "#0c64ff",
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: "#0c64ff",
+          shadowOpacity: 0.4,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 8,
+        }}
+      >
+        <Ionicons name="add" size={30} color="#fff" />
+      </Pressable>
+
+      <AddRecordModal visible={isAddRecordOpen} onClose={() => setIsAddRecordOpen(false)} />
+    </View>
   );
 }
 
