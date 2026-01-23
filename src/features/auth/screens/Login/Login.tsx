@@ -1,6 +1,8 @@
+import { logoSvg } from "@/assets";
 import {
   Box,
   Button,
+  ButtonSpinner,
   ButtonText,
   FormControl,
   FormControlError,
@@ -14,17 +16,17 @@ import {
   Text,
   VStack,
 } from "@/components";
+import { useAuth } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Asset } from "expo-asset";
 import { Link } from "expo-router";
 import React, { useState } from "react";
+import { Alert } from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SvgUri } from "react-native-svg";
 import { z } from "zod";
-
-import { logoSvg } from "@/assets";
 
 const schema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email"),
@@ -33,8 +35,9 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const LoginScreen = () => {
+const Login = () => {
   const [showPin, setShowPin] = useState(false);
+  const { login, isLoggingIn } = useAuth();
 
   const {
     control,
@@ -47,9 +50,12 @@ const LoginScreen = () => {
 
   const logoUri = Asset.fromModule(logoSvg).uri;
 
-  const onSubmit = (data: FormData) => {
-    // TODO: Integrate login API
-    console.log("Login data:", data);
+  const onSubmit = async (data: FormData) => {
+    try {
+      await login({ email: data.email, pin: data.pin });
+    } catch (error) {
+      Alert.alert("Login Failed", error instanceof Error ? error.message : "Unable to login");
+    }
   };
 
   return (
@@ -167,6 +173,7 @@ const LoginScreen = () => {
 
               <Button
                 onPress={handleSubmit(onSubmit)}
+                disabled={isLoggingIn}
                 className="h-12 rounded-xl bg-[#0066ff]"
                 style={{
                   shadowColor: "#000000",
@@ -176,7 +183,10 @@ const LoginScreen = () => {
                   elevation: 6,
                 }}
               >
-                <ButtonText className="text-base font-medium">Log In</ButtonText>
+                {isLoggingIn && <ButtonSpinner color="white" />}
+                <ButtonText className="text-base font-medium">
+                  {isLoggingIn ? "Logging In..." : "Log In"}
+                </ButtonText>
               </Button>
             </VStack>
 
@@ -195,4 +205,4 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;
+export default Login;

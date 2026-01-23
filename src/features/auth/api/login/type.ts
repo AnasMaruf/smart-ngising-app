@@ -1,5 +1,16 @@
+import type { User } from "../register/type";
+
+export interface LoginRequest {
+  email?: string;
+  username?: string;
+  pin: string;
+}
+
 export interface IAuthLoginResponse {
-  data: string;
+  data: User;
+  accessToken: string;
+  refreshToken: string;
+  message: string;
 }
 
 export interface IAuthErrorResponse {

@@ -50,3 +50,4 @@ export * from "./ui/tooltip";
 export * from "./ui/view";
 export * from "./ui/virtualized-list";
 export * from "./ui/vstack";
+export * from "./AddRecordModal";
