@@ -1,54 +1,122 @@
 import { AddRecordModal } from "@/components";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  useBabTrackingListQuery,
+  type BabColor,
+  type BabTracking,
+} from "@/features/home/api/bab-tracking";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const summaryStats = [
-  { id: "logs", label: "Logs", value: 3, icon: "document-text-outline" },
-  { id: "streak", label: "Day Streak", value: 7, icon: "trending-up-outline" },
-];
+const COLOR_SWATCHES: Record<BabColor, string> = {
+  BROWN: "#8c6239",
+  DARK_BROWN: "#5a3213",
+  LIGHT_BROWN: "#cfa16f",
+  YELLOW: "#f4c842",
+  GREEN: "#4cbc7c",
+  BLACK: "#30313d",
+  RED: "#f45b69",
+  WHITE: "#d9d9e0",
+};
 
-const recentLogs = [
-  {
-    id: "1",
-    date: "Jan 12",
-    time: "08:30 AM",
-    food: "Coffee, oatmeal",
-    type: 4,
-    size: "Medium",
-    color: "Brown",
-  },
-  {
-    id: "2",
-    date: "Jan 11",
-    time: "09:15 AM",
-    food: "Spicy noodles",
-    type: 3,
-    size: "Medium",
-    color: "Brown",
-  },
-  {
-    id: "3",
-    date: "Jan 10",
-    time: "07:45 AM",
-    food: "Vegetables, rice",
-    type: 4,
-    size: "Large",
-    color: "Brown",
-  },
-];
+const getLocalDateKey = (value: string | Date) => {
+  const date = typeof value === "string" ? new Date(value) : value;
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const calculateDayStreak = (records: BabTracking[]) => {
+  if (!records.length) return 0;
+  const dateSet = new Set(records.map((record) => getLocalDateKey(record.dateTime)));
+  let streak = 0;
+  const cursor = new Date();
+
+  while (dateSet.has(getLocalDateKey(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+};
+
+const formatEnumLabel = (value?: string | null) => {
+  if (!value) return "-";
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
+const formatRecordDate = (iso: string) => {
+  const date = new Date(iso);
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
+const formatRecordTime = (iso: string) => {
+  const date = new Date(iso);
+  return date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+};
+
+const getFoodSummary = (record: BabTracking) => {
+  if (record.recentMeals?.length) {
+    return record.recentMeals.map((meal) => meal.foodName).join(", ");
+  }
+  if (record.notes) return record.notes;
+  return "No notes added";
+};
+
+const getColorSwatch = (color: BabColor) => COLOR_SWATCHES[color] ?? "#8c6239";
 
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const firstName = user?.fullName?.split(" ")?.[0] ?? "Friend";
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
+  const { data, isLoading, isFetching, refetch, isError, error } = useBabTrackingListQuery();
+  const records = data?.data ?? [];
+  const recentLogs = records.slice(0, 10);
+  const summaryStats = useMemo(
+    () => [
+      { id: "logs", label: "Logs", value: records.length, icon: "document-text-outline" },
+      {
+        id: "streak",
+        label: "Day Streak",
+        value: calculateDayStreak(records),
+        icon: "trending-up-outline",
+      },
+    ],
+    [records]
+  );
+  const todayLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    []
+  );
+  const isRefreshing = isFetching && !isLoading;
 
   return (
     <View className="flex-1">
       <SafeAreaView className="flex-1 bg-[#f1f4ff]">
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} />}
+        >
           <View className="rounded-b-[32px] bg-[#0c64ff] px-6 pb-10 pt-4">
           <View className="flex-row items-start justify-between">
             <View>
@@ -62,7 +130,7 @@ export default function HomeScreen() {
           <View style={styles.cardShadow} className="mt-8 rounded-3xl bg-white p-5">
             <View className="flex-row items-center justify-between">
               <Text className="text-lg font-semibold text-[#1a1f36]">Today's Summary</Text>
-              <Text className="text-sm font-semibold text-[#0c64ff]">Jan 12, 2026</Text>
+              <Text className="text-sm font-semibold text-[#0c64ff]">{todayLabel}</Text>
             </View>
             <View className="mt-5 flex-row gap-4">
               {summaryStats.map((stat) => (
@@ -83,28 +151,48 @@ export default function HomeScreen() {
             Recent records from the past month
           </Text>
           <View className="mt-5 gap-4">
-            {recentLogs.map((log) => (
-              <View
-                key={log.id}
-                style={styles.cardShadow}
-                className="flex-row rounded-3xl bg-white p-4"
-              >
-                <View className="mr-4 items-center rounded-2xl bg-[#eef3ff] px-4 py-3">
-                  <Text className="text-xs font-semibold text-[#6c7280]">Type</Text>
-                  <Text className="text-lg font-semibold text-[#0c64ff]">{log.type}</Text>
-                  <View className="mt-2 h-2 w-10 rounded-full bg-[#8c6239]" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-sm font-semibold text-[#1a1f36]">
-                    {log.date} at {log.time}
-                  </Text>
-                  <Text className="mt-1 text-base font-semibold text-[#1a1f36]">{log.food}</Text>
-                  <Text className="mt-1 text-xs text-[#6c7280]">
-                    {log.size} • {log.color}
-                  </Text>
-                </View>
+            {isLoading ? (
+              <View className="items-center py-6">
+                <ActivityIndicator color="#0c64ff" />
               </View>
-            ))}
+            ) : recentLogs.length === 0 ? (
+              <Text className="text-sm text-[#6c7280]">
+                Belum ada catatan. Tekan tombol tambah untuk membuat log pertama Anda.
+              </Text>
+            ) : (
+              recentLogs.map((log) => (
+                <View
+                  key={log.id}
+                  style={styles.cardShadow}
+                  className="flex-row rounded-3xl bg-white p-4"
+                >
+                  <View className="mr-4 items-center rounded-2xl bg-[#eef3ff] px-4 py-3">
+                    <Text className="text-xs font-semibold text-[#6c7280]">Type</Text>
+                    <Text className="text-lg font-semibold text-[#0c64ff]">{log.bristolScale}</Text>
+                    <View
+                      className="mt-2 h-2 w-10 rounded-full"
+                      style={{ backgroundColor: getColorSwatch(log.color) }}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-sm font-semibold text-[#1a1f36]">
+                      {formatRecordDate(log.dateTime)} at {formatRecordTime(log.dateTime)}
+                    </Text>
+                    <Text className="mt-1 text-base font-semibold text-[#1a1f36]">
+                      {getFoodSummary(log)}
+                    </Text>
+                    <Text className="mt-1 text-xs text-[#6c7280]">
+                      {formatEnumLabel(log.volume)} • {formatEnumLabel(log.color)}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            )}
+            {isError && (
+              <Text className="text-sm text-red-500">
+                {error instanceof Error ? error.message : "Failed to load records."}
+              </Text>
+            )}
           </View>
           </View>
         </ScrollView>
