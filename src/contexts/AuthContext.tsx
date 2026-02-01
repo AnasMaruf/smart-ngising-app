@@ -1,9 +1,16 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import * as SecureStore from "expo-secure-store";
 import { useLoginMutation } from "@/features/auth/api/login";
 import type { LoginRequest } from "@/features/auth/api/login/type";
 import { useRegisterMutation } from "@/features/auth/api/register";
 import type { User } from "@/features/auth/api/register/type";
+import { subscribeAuthEvent } from "./authEvents";
 
 type AuthContextType = {
   user: User | null;
@@ -42,33 +49,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     })();
   }, []);
 
-  const register = async (data: {
-    fullName: string;
-    username: string;
-    email: string;
-    pin: string;
-  }) => {
-    const res = await registerMutation.mutateAsync(data);
-    await SecureStore.setItemAsync("accessToken", res.data.accessToken);
-    await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
-    await SecureStore.setItemAsync("user", JSON.stringify(res.data.user));
-    setUser(res.data.user);
-  };
+  const register = useCallback(
+    async (data: { fullName: string; username: string; email: string; pin: string }) => {
+      const res = await registerMutation.mutateAsync(data);
+      await SecureStore.setItemAsync("accessToken", res.data.accessToken);
+      await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
+      await SecureStore.setItemAsync("user", JSON.stringify(res.data.user));
+      setUser(res.data.user);
+    },
+    [registerMutation]
+  );
 
-  const login = async (data: Pick<LoginRequest, "email" | "username" | "pin">) => {
-    const res = await loginMutation.mutateAsync(data);
-    await SecureStore.setItemAsync("accessToken", res.accessToken);
-    await SecureStore.setItemAsync("refreshToken", res.refreshToken);
-    await SecureStore.setItemAsync("user", JSON.stringify(res.data));
-    setUser(res.data);
-  };
+  const login = useCallback(
+    async (data: Pick<LoginRequest, "email" | "username" | "pin">) => {
+      const res = await loginMutation.mutateAsync(data);
+      await SecureStore.setItemAsync("accessToken", res.accessToken);
+      await SecureStore.setItemAsync("refreshToken", res.refreshToken);
+      await SecureStore.setItemAsync("user", JSON.stringify(res.data));
+      setUser(res.data);
+    },
+    [loginMutation]
+  );
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await SecureStore.deleteItemAsync("accessToken");
     await SecureStore.deleteItemAsync("refreshToken");
     await SecureStore.deleteItemAsync("user");
     setUser(null);
-  };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeAuthEvent(async (event) => {
+      if (event === "FORCE_LOGOUT") {
+        await logout();
+      }
+    });
+    return unsubscribe;
+  }, [logout]);
 
   return (
     <AuthContext.Provider

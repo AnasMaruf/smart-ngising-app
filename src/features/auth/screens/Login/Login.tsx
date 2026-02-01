@@ -18,22 +18,17 @@ import {
 } from "@/components";
 import { useAuth } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Asset } from "expo-asset";
 import { Link } from "expo-router";
 import React, { useState } from "react";
-import { Alert } from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SvgUri } from "react-native-svg";
-import { z } from "zod";
 
-const schema = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email"),
-  pin: z.string().length(6, "PIN must be 6 digits").regex(/^\d+$/, "PIN must be numbers only"),
-});
-
-type FormData = z.infer<typeof schema>;
+type FormData = {
+  email: string;
+  pin: string;
+};
 
 const Login = () => {
   const [showPin, setShowPin] = useState(false);
@@ -42,19 +37,51 @@ const Login = () => {
   const {
     control,
     handleSubmit,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
     defaultValues: { email: "", pin: "" },
   });
 
   const logoUri = Asset.fromModule(logoSvg).uri;
 
+  const applyServerErrors = (details: unknown) => {
+    if (!details || typeof details !== "object") return false;
+    let handled = false;
+    Object.entries(details as Record<string, unknown>).forEach(([key, value]) => {
+      const message = Array.isArray(value) ? value.join(", ") : String(value);
+      if (key === "email" || key === "username") {
+        setError("email", { type: "server", message });
+        handled = true;
+      } else if (key === "pin") {
+        setError("pin", { type: "server", message });
+        handled = true;
+      } else if (key === "general") {
+        setError("pin", { type: "server", message });
+        handled = true;
+      }
+    });
+    return handled;
+  };
+
   const onSubmit = async (data: FormData) => {
+    clearErrors();
     try {
       await login({ email: data.email, pin: data.pin });
     } catch (error) {
-      Alert.alert("Login Failed", error instanceof Error ? error.message : "Unable to login");
+      if (error instanceof Error && applyServerErrors((error as any).details)) {
+        return;
+      }
+      const message = error instanceof Error ? error.message : "Unable to login";
+      const normalized = message.toLowerCase();
+      if (normalized.includes("email") || normalized.includes("username")) {
+        setError("email", { type: "server", message });
+      } else if (normalized.includes("pin") || normalized.includes("credential")) {
+        setError("pin", { type: "server", message });
+      } else {
+        setError("pin", { type: "server", message });
+      }
     }
   };
 
@@ -113,7 +140,10 @@ const Login = () => {
                     <Input className="h-11 rounded-lg border-0 bg-[#f3f3f5]">
                       <InputField
                         value={value}
-                        onChangeText={onChange}
+                        onChangeText={(text) => {
+                          if (errors.email) clearErrors("email");
+                          onChange(text);
+                        }}
                         onBlur={onBlur}
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -145,7 +175,10 @@ const Login = () => {
                     <Input className="h-11 rounded-lg border-0 bg-[#f3f3f5]">
                       <InputField
                         value={value}
-                        onChangeText={onChange}
+                        onChangeText={(text) => {
+                          if (errors.pin) clearErrors("pin");
+                          onChange(text);
+                        }}
                         onBlur={onBlur}
                         secureTextEntry={!showPin}
                         keyboardType="number-pad"

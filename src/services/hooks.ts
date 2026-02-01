@@ -4,6 +4,8 @@ import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
+import { emitAuthEvent } from "@/contexts/authEvents";
+
 const resolveHostFromDebugger = () => {
   const debuggerHost = Constants.expoConfig?.hostUri ?? Constants.expoGoConfig?.debuggerHost;
   if (!debuggerHost) return null;
@@ -16,6 +18,15 @@ const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL || `http://${host}:3000`;
 
 type RequestOptions = {
   requiresAuth?: boolean;
+};
+
+const handleUnauthorized = async () => {
+  await Promise.all([
+    SecureStore.deleteItemAsync("accessToken"),
+    SecureStore.deleteItemAsync("refreshToken"),
+    SecureStore.deleteItemAsync("user"),
+  ]);
+  emitAuthEvent("FORCE_LOGOUT");
 };
 
 async function request<TResponse>(
@@ -36,13 +47,37 @@ async function request<TResponse>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${url}`, {
+  const response = await fetch(`${BASE_URL}${url}`, {
     ...init,
     headers,
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.errors || json.message || "Request failed");
-  return json;
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    if (response.status === 401 && options?.requiresAuth) {
+      await handleUnauthorized();
+      throw new Error("Session expired. Please log in again.");
+    }
+
+    const errorDetails = payload?.errors;
+    const message =
+      (typeof errorDetails === "string" && errorDetails) ||
+      payload?.message ||
+      "Request failed";
+
+    const error = new Error(
+      typeof message === "string" ? message : JSON.stringify(message)
+    ) as Error & { details?: unknown };
+
+    if (errorDetails && typeof errorDetails !== "string") {
+      error.details = errorDetails;
+    }
+
+    throw error;
+  }
+
+  return payload as TResponse;
 }
 
 export function usePostFormData<TData, TResponse>(endpoint: string, options?: RequestOptions) {

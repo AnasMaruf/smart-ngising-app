@@ -19,32 +19,19 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Asset } from "expo-asset";
 import { Ionicons } from "@expo/vector-icons";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "expo-router";
 import React, { useState } from "react";
-import { Alert } from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SvgUri } from "react-native-svg";
-import { z } from "zod";
 
-const schema = z
-  .object({
-    fullName: z.string().min(1, "Full name is required"),
-    username: z
-      .string()
-      .min(1, "Username is required")
-      .regex(/^[a-z0-9_]+$/, "Lowercase, numbers, underscore only"),
-    email: z.string().min(1, "Email is required").email("Invalid email"),
-    pin: z.string().length(6, "PIN must be 6 digits").regex(/^\d+$/, "PIN must be numbers only"),
-    confirmPin: z.string(),
-  })
-  .refine((data) => data.pin === data.confirmPin, {
-    message: "PINs don't match",
-    path: ["confirmPin"],
-  });
-
-type FormData = z.infer<typeof schema>;
+type FormData = {
+  fullName: string;
+  username: string;
+  email: string;
+  pin: string;
+  confirmPin: string;
+};
 
 const RegisterScreen = () => {
   const [showPin, setShowPin] = useState(false);
@@ -54,15 +41,59 @@ const RegisterScreen = () => {
   const {
     control,
     handleSubmit,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
     defaultValues: { fullName: "", username: "", email: "", pin: "", confirmPin: "" },
   });
 
   const logoUri = Asset.fromModule(logoSvg).uri;
 
+  const applyServerErrors = (details: unknown) => {
+    if (!details || typeof details !== "object") return false;
+    let handled = false;
+    Object.entries(details as Record<string, unknown>).forEach(([key, value]) => {
+      const message = Array.isArray(value) ? value.join(", ") : String(value);
+      switch (key) {
+        case "fullName":
+          setError("fullName", { type: "server", message });
+          handled = true;
+          break;
+        case "username":
+          setError("username", { type: "server", message });
+          handled = true;
+          break;
+        case "email":
+          setError("email", { type: "server", message });
+          handled = true;
+          break;
+        case "pin":
+          setError("pin", { type: "server", message });
+          handled = true;
+          break;
+        case "confirmPin":
+          setError("confirmPin", { type: "server", message });
+          handled = true;
+          break;
+        case "general":
+          setError("confirmPin", { type: "server", message });
+          handled = true;
+          break;
+        default:
+          break;
+      }
+    });
+    return handled;
+  };
+
   const onSubmit = async (data: FormData) => {
+    clearErrors();
+    if (data.pin !== data.confirmPin) {
+      setError("confirmPin", { type: "manual", message: "PINs don't match" });
+      return;
+    }
+
     try {
       await register({
         fullName: data.fullName,
@@ -71,7 +102,22 @@ const RegisterScreen = () => {
         pin: data.pin,
       });
     } catch (error) {
-      Alert.alert("Error", error instanceof Error ? error.message : "Registration failed");
+      if (error instanceof Error && applyServerErrors((error as any).details)) {
+        return;
+      }
+      const message = error instanceof Error ? error.message : "Registration failed";
+      const normalized = message.toLowerCase();
+      if (normalized.includes("name")) {
+        setError("fullName", { type: "server", message });
+      } else if (normalized.includes("username")) {
+        setError("username", { type: "server", message });
+      } else if (normalized.includes("email")) {
+        setError("email", { type: "server", message });
+      } else if (normalized.includes("pin")) {
+        setError("pin", { type: "server", message });
+      } else {
+        setError("confirmPin", { type: "server", message });
+      }
     }
   };
 
@@ -130,7 +176,10 @@ const RegisterScreen = () => {
                     <Input className="h-11 rounded-lg border-0 bg-[#f3f3f5]">
                       <InputField
                         value={value}
-                        onChangeText={onChange}
+                        onChangeText={(text) => {
+                          if (errors.fullName) clearErrors("fullName");
+                          onChange(text);
+                        }}
                         onBlur={onBlur}
                         placeholder="John Doe"
                         placeholderTextColor="#717182"
@@ -159,7 +208,10 @@ const RegisterScreen = () => {
                     <Input className="h-11 rounded-lg border-0 bg-[#f3f3f5]">
                       <InputField
                         value={value}
-                        onChangeText={onChange}
+                        onChangeText={(text) => {
+                          if (errors.username) clearErrors("username");
+                          onChange(text);
+                        }}
                         onBlur={onBlur}
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -190,7 +242,10 @@ const RegisterScreen = () => {
                     <Input className="h-11 rounded-lg border-0 bg-[#f3f3f5]">
                       <InputField
                         value={value}
-                        onChangeText={onChange}
+                        onChangeText={(text) => {
+                          if (errors.email) clearErrors("email");
+                          onChange(text);
+                        }}
                         onBlur={onBlur}
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -222,7 +277,10 @@ const RegisterScreen = () => {
                     <Input className="h-11 rounded-lg border-0 bg-[#f3f3f5]">
                       <InputField
                         value={value}
-                        onChangeText={onChange}
+                        onChangeText={(text) => {
+                          if (errors.pin) clearErrors("pin");
+                          onChange(text);
+                        }}
                         onBlur={onBlur}
                         secureTextEntry={!showPin}
                         keyboardType="number-pad"
@@ -261,7 +319,10 @@ const RegisterScreen = () => {
                     <Input className="h-11 rounded-lg border-0 bg-[#f3f3f5]">
                       <InputField
                         value={value}
-                        onChangeText={onChange}
+                        onChangeText={(text) => {
+                          if (errors.confirmPin) clearErrors("confirmPin");
+                          onChange(text);
+                        }}
                         onBlur={onBlur}
                         secureTextEntry={!showConfirmPin}
                         keyboardType="number-pad"
